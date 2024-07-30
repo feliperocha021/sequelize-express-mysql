@@ -1,12 +1,13 @@
 const jwt = require('jsonwebtoken')
 const util = require('util')
 const crypto = require('crypto')
-const { Sequelize } = require('sequelize');
+const { Sequelize, where } = require('sequelize');
 
 const db = require('../models')
 const asyncErrorHandler = require('../utils/asyncErrorHandler')
 const CustomError = require('../utils/CustomError')
-const sendEmail = require('../utils/email')
+const sendEmail = require('../utils/email');
+const { updateProduct } = require('./productController');
 
 //models
 const User = db.users
@@ -114,7 +115,7 @@ const protect = asyncErrorHandler(async (req, res, next) => {
             id: decodeToken.id
         }
     })
-    console.log(user)
+    
     if(!user) {
         const error = new CustomError('The user withe given token does no exist', 401)
         return next(error)
@@ -227,15 +228,15 @@ const resetPassword = asyncErrorHandler(async (req, res, next) => {
         return next(error)
     }
 
+    if(User.validatePassword(req.body.password)) {
+        const error = new CustomError('A senha deve ter entre 8 e 16 caracteres.', 400)
+        return next(error)
+    }
+
     user.password = req.body.password
     user.passwordResetToken = null
     user.passwordResetTokenExpires = null
     user.passwordChanged = Date.now()
-
-    if(User.validatePassword(user.password)) {
-        const error = new CustomError('A senha deve ter entre 8 e 16 caracteres.', 400)
-        return next(error)
-    }
 
     await user.save()
 
@@ -252,11 +253,46 @@ const resetPassword = asyncErrorHandler(async (req, res, next) => {
 
 })
 
+const updatePassword = asyncErrorHandler(async (req, res, next) => {
+    const user = await User.findOne({
+        where: {
+            id: req.user.id
+        }
+    })
+
+    if(!(await User.comparePasswordInDb(req.body.currentPassword, user.password))) {
+        const error = new CustomError('Incorrect current password', 401)
+        return next(error)
+    }
+
+    if(User.validatePassword(req.body.password)) {
+        const error = new CustomError('A senha deve ter entre 8 e 16 caracteres.', 400)
+        return next(error)
+    }
+
+    user.password = req.body.password
+    user.passwordChanged = Date.now()
+
+    await user.save()
+
+    const token = signToken(user.id)
+    clearUser(user)
+
+    res.status(200).json({
+        status: 'success',
+        token,
+        data: {
+            user
+        }
+    })
+})
+
 module.exports = {
     signup,
     login,
     protect,
     restrict,
     forgotPassword,
-    resetPassword
+    resetPassword,
+    updatePassword
 }
