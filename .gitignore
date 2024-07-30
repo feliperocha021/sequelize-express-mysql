@@ -1,0 +1,46 @@
+# Dependências
+/node_modules
+/.pnp
+.pnp.js
+
+# Cobertura de testes
+/coverage
+
+# Build de produção
+/build
+
+# Arquivos de ambiente local
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Cache do ESLint
+.eslintcache
+
+# Cache do Microbundle
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Histórico do REPL do Node.js
+.node_repl_history
+
+# Arquivos gerados pelo 'npm pack'
+*.tgz
+
+# Arquivo de integridade do Yarn
+.yarn-integrity
+
+# Cache do Parcel Bundler
+.cache
+.parcel-cache
+
+# Saída de build do Next.js
+.next
+out
+
+# Saída de build/generate do Nuxt.js
+.nuxt
+dist
