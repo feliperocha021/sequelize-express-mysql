@@ -45,3 +45,9 @@ out
 # Saída de build/generate do Nuxt.js
 .nuxt
 dist
+
+# Ignore arquivos de configuração do MySQL
+data/mysql/auto.cnf
+data/mysql/binlog.index
+data/mysql/ib_buffer_pool
+data/mysql/mysql.sock

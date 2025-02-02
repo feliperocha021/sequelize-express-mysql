@@ -15,4 +15,4 @@ router.route('/:id')
 router.route('/:id/reviews')
     .get(authController.protect, productController.getProductReviews)
 
-module.exports =  router
+module.exports = router

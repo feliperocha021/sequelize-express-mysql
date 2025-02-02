@@ -26,10 +26,21 @@ function clearUser(user) {
     return user
 }
 
+function formatDate(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
 function signToken (id) {
     const token = jwt.sign({id}, process.env.SECRET_STRING, {
         expiresIn: process.env.LOGIN_EXPIRES
-    }) //utiliza o playload(dados do aarquivo json) e a string secreta(min: 32caracteres) para criar o token
+    }) //utiliza o playload(dados do arquivo json) e a string secreta(min: 32caracteres) para criar o token
 
     return token
 }
@@ -39,7 +50,7 @@ const signup = asyncErrorHandler(async (req, res, next) => {
         name: req.body.name,
         email: req.body.email,
         password: req.body.password,
-        passwordChanged: req.body.passwordChanged
+        passwordChanged: formatDate(new Date())
     }
 
     if(User.validatePassword(info.password)) {
@@ -48,7 +59,6 @@ const signup = asyncErrorHandler(async (req, res, next) => {
     }
 
     const user = await User.create(info)
-
     const token = signToken(user.id)
     clearUser(user)
 
@@ -96,7 +106,7 @@ const protect = asyncErrorHandler(async (req, res, next) => {
     //Ler o token e verificar se o mesmo existe
     const testToken = req.headers.authorization
     let token
-
+    console.log(testToken)
     if(testToken && testToken.startsWith('bearer')) {
         token = testToken.split(' ')[1]
     }

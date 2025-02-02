@@ -1,0 +1,26 @@
+version: '3.8'
+services:
+  app:
+    build: .
+    container_name: meu-app
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql
+    networks:
+      - app_network
+  mysql:
+    image: mysql:latest
+    container_name: productsdb
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: productsdb
+    ports:
+      - "3308:3306"
+    volumes:
+      - ./data/mysql:/var/lib/mysql
+    networks:
+      - app_network
+networks:
+  app_network:
+    driver: bridge

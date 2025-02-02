@@ -1,3 +1,5 @@
+const { Op } = require('sequelize');
+
 const db = require('../models')
 const asyncErrorHandler = require('../utils/asyncErrorHandler')
 const CustomError = require('../utils/CustomError')
@@ -34,7 +36,62 @@ const addProduct = asyncErrorHandler(async (req, res, next) => {
 })
 
 const getAllProducts = asyncErrorHandler(async (req, res, next) => {
-    const products = await Product.findAll({})
+    // Converte o objeto de consulta em uma string
+    let queryStr = JSON.stringify(req.query);
+    queryStr = queryStr.replace(/\b(eq|ne|gte|gt|lte|lt)\b/g, (match) => `$${match}`);
+    // Analisa a string modificada de volta em um objeto JavaScript
+    const queryObj = JSON.parse(queryStr);
+
+    // Converte todos os valores numéricos do objeto de consulta e aplica operadores do Sequelize
+    const query = {};
+    for (const key in queryObj) {
+        if (key != 'sort' && key != 'fields' && typeof queryObj[key] === 'object' && !Array.isArray(queryObj[key])) {
+            query[key] = {};
+            for (const subKey in queryObj[key]) {
+                query[key][Op[subKey.replace('$', '')]] = parseFloat(queryObj[key][subKey]);
+            }
+        } else if (key != 'sort' && key != 'fields') {
+            query[key] = !isNaN(queryObj[key]) ? parseFloat(queryObj[key]) : queryObj[key];
+        }
+    }
+
+    // LOGICA DE ORDENACAO
+    // Pode usar o FOREACH ou MAP
+    /*
+    let order = [];
+    if (queryObj.sort) {
+        const sortFields = req.query.sort.split(',');
+        sortFields.forEach(field => {
+            if (field.startsWith('-')) {
+                order.push([field.slice(1), 'DESC']);
+            } else {
+                order.push([field, 'ASC']);
+            }
+        });
+    }
+    */
+    let order = []
+    if (req.query.sort) {
+        sortFields = req.query.sort.split(',')
+        order = sortFields.map(field => {
+            if (field.startsWith('-')) {
+                return ([field.slice(1), 'DESC'])
+            } else {
+                return ([field, 'ASC'])
+            }
+        })
+    } else {
+        order.push(['createdAt', 'DESC'])
+    }
+
+    //FILTRAR CAMPOS SELECIONADOS
+    const attributes = req.query.fields ? req.query.fields.split(',') : { exclude: ['createdAt', 'updatedAt'] }
+
+    const products = await Product.findAll({ 
+        where: query,
+        order: order,
+        attributes: attributes
+    });
 
     res.status(200).json({
         status: 'success',
@@ -42,8 +99,8 @@ const getAllProducts = asyncErrorHandler(async (req, res, next) => {
         data: {
             products
         }
-    })
-})
+    });
+});
 
 const getProduct = asyncErrorHandler(async (req, res, next) => {
     let id = req.params.id

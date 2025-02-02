@@ -48,6 +48,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     {
         timestamps: true,
+        freezeTableName: true, // Impede que o Sequelize pluralize o nome da tabela
         hooks: {
             beforeCreate: async function (user) {
                 if (user.password) {

@@ -1,8 +1,8 @@
-module.exports = (sequelize , DataTypes) => {
+module.exports = (sequelize, DataTypes) => {
     const Product = sequelize.define('product', {
         title: {
-            type: DataTypes.STRING(15),
-            allowNull: false, //campo obrigatório
+            type: DataTypes.STRING(30),
+            allowNull: false, // campo obrigatório
             unique: {
                 msg: 'Este produto já foi registrado'
             },
@@ -17,7 +17,10 @@ module.exports = (sequelize , DataTypes) => {
             type: DataTypes.BOOLEAN,
             defaultValue: false
         }
-    })
+    }, {
+        timestamps: true, // Adiciona createdAt e updatedAt automaticamente
+        freezeTableName: true // Impede que o Sequelize pluralize o nome da tabela
+    });
     
-    return Product
+    return Product;
 }
